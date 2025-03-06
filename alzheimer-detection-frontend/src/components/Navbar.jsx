@@ -59,7 +59,7 @@ export default function Navbar() {
           <a className="btn btn-ghost text-3xl">Alzheimer Detector</a>
         </div>
         <div className="navbar-center hidden lg:flex">
-          <ul className="menu menu-horizontal px-1 text-xl">
+          <ul className="menu menu-horizontal px-1 lg:text-xl md:text-lg sm:text-md text-sm">
             <li>
               <a>What is Alzheimer's?</a>
             </li>
