@@ -1,4 +1,5 @@
 import AnimatedContent from "./AnimatedContent"
+import { Link } from "react-router-dom"
 
 export default function Navbar() {
   return (
@@ -57,11 +58,13 @@ export default function Navbar() {
                 </ul>
               </li>
               <li>
-                <a>About us</a>
+                <Link to="/about">About us</Link>
               </li>
             </ul>
           </div>
-          <a className="btn btn-ghost text-3xl">Alzheimer Detector</a>
+          <Link to="/" className="btn btn-ghost text-3xl">
+            Alzheimer Detector
+          </Link>
         </div>
         <div className="navbar-end hidden lg:flex">
           <ul className="menu menu-horizontal px-1 lg:text-xl md:text-lg sm:text-md text-sm">
@@ -89,7 +92,7 @@ export default function Navbar() {
               </details>
             </li>
             <li>
-              <a>About us</a>
+              <Link to="/about">About us</Link>
             </li>
           </ul>
         </div>
