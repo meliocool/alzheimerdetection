@@ -22,31 +22,31 @@ function Form() {
     gender: "",
     ethnicity: "",
     education: "",
-    familyHistoryAlzheimers: false,
+    familyHistoryOfAlzheimers: "",
 
     // Daily Routines
-    smoking: false,
+    smoking: "",
     alcoholConsumption: "",
     physicalActivity: "",
     dietQuality: "",
     sleepQuality: "",
     functionalAssessment: "",
-    memoryComplaints: false,
-    behavioralProblems: false,
+    memoryComplaints: "",
+    behavioralProblems: "",
     ADL: "",
-    confusion: false,
-    disorientation: false,
-    personalityChanges: false,
-    difficultyCompletingTasks: false,
-    forgetfulness: false,
+    confusion: "",
+    disorientation: "",
+    personalityChanges: "",
+    difficultyCompletingTasks: "",
+    forgetfulness: "",
 
     // Medical History
     BMI: "",
-    depression: false,
-    cardiovascularDisease: false,
-    diabetes: false,
-    headInjury: false,
-    hyperTension: false,
+    depression: "",
+    cardiovascularDisease: "",
+    diabetes: "",
+    headInjury: "",
+    hyperTension: "",
     systolicBP: "",
     diastolicBP: "",
     cholesterolTotal: "",
@@ -54,14 +54,21 @@ function Form() {
     cholesterolHDL: "",
     cholesterolTriglycerides: "",
     MMSE: "",
+
+    // Model Selection
+    model: "XGBoost",
   })
+
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState(null)
+  const [error, setError] = useState(null)
 
   // Update form data
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
     setFormData({
       ...formData,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: type === "checkbox" ? (checked ? "Yes" : "No") : value,
     })
   }
 
@@ -137,7 +144,7 @@ function Form() {
           columnClass: "col-span-1",
         },
         {
-          name: "Functional Assessment",
+          name: "functionalAssessment",
           label: "How do you function daily?",
           type: "number",
           columnClass: "col-span-1",
@@ -295,18 +302,71 @@ function Form() {
           name: "model",
           label: "Choose The Model to be used",
           type: "select",
-          options: ["", "Random Forest", "Logistic Regression", "XGBoost"],
-          columnClass: "col-span-1",
+          options: ["XGBoost", "Random Forest", "Logistic Regression"],
+          columnClass: "col-span-2",
         },
       ],
     },
   ]
 
-  // Handle form submission
-  const handleSubmit = (e) => {
+  // Prepare data for the model
+  const prepareDataForModel = () => {
+    // Convert Yes/No values to binary
+    const processedData = {}
+
+    for (const [key, value] of Object.entries(formData)) {
+      if (value === "Yes") {
+        processedData[key] = 1
+      } else if (value === "No") {
+        processedData[key] = 0
+      } else if (value === "" || value === null) {
+        // Handle empty values - might want to use defaults or return an error
+        processedData[key] = 0
+      } else {
+        // Convert numeric strings to numbers
+        if (!isNaN(value) && value !== "") {
+          processedData[key] = parseFloat(value)
+        } else {
+          processedData[key] = value
+        }
+      }
+    }
+
+    return processedData
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log("Form data submitted:", formData)
-    // Nunggu Modeol dari Damnil
+    setLoading(true)
+    setError(null)
+
+    try {
+      const processedData = prepareDataForModel()
+      const modelName = formData.model
+
+      const response = await fetch("http://localhost:5000/api/predict", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          features: processedData,
+          model: modelName,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Server responded with status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      setResult(data)
+    } catch (error) {
+      console.error("Error:", error)
+      setError(error.message || "An error occurred during prediction")
+    } finally {
+      setLoading(false)
+    }
   }
 
   // Pagination
@@ -348,7 +408,15 @@ function Form() {
           >
             {field.options.map((option) => (
               <option key={option} value={option}>
-                {option || "Select..."}
+                {option === ""
+                  ? "Select..."
+                  : option === "XGBoost"
+                  ? "XGBoost"
+                  : option === "Random Forest"
+                  ? "Random Forest"
+                  : option === "Logistic Regression"
+                  ? "Logistic Regression"
+                  : option}
               </option>
             ))}
           </select>
@@ -359,7 +427,7 @@ function Form() {
             type="checkbox"
             id={field.name}
             name={field.name}
-            checked={formData[field.name]}
+            checked={formData[field.name] === "Yes"}
             onChange={handleChange}
             className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           />
@@ -403,7 +471,7 @@ function Form() {
               ></div>
             </div>
             <div className="flex justify-between mt-2 text-sm text-gray-600">
-              {formPages.map((page, index) => (
+              {formPages.map((_, index) => (
                 <div
                   key={index}
                   className={`cursor-pointer ${
@@ -417,66 +485,195 @@ function Form() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit}>
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                {formPages[currentPage].title}
-              </h2>
+          <form>
+            {!result ? (
+              <>
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                    {formPages[currentPage].title}
+                  </h2>
 
-              {/* Two-column grid layout */}
-              <div className="grid grid-cols-2 gap-4">
-                {formPages[currentPage].fields.map((field) => {
-                  // Determine if this field should be full width or half width
-                  const isFullWidth =
-                    currentPage === 0 &&
-                    ["firstName", "lastName", "age"].includes(field.name)
+                  {/* Two-column grid layout */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {formPages[currentPage].fields.map((field) => {
+                      // Determine if this field should be full width or half width
+                      const isFullWidth =
+                        currentPage === 0 &&
+                        ["firstName", "lastName", "age"].includes(field.name)
 
-                  return (
-                    <div
-                      key={field.name}
-                      className={`form-group ${
-                        isFullWidth ? "col-span-2" : "col-span-1"
-                      }`}
+                      return (
+                        <div
+                          key={field.name}
+                          className={`form-group ${
+                            isFullWidth || field.columnClass
+                              ? field.columnClass || "col-span-2"
+                              : "col-span-1"
+                          }`}
+                        >
+                          <label
+                            htmlFor={field.name}
+                            className="block mb-2 font-medium text-gray-700"
+                          >
+                            {field.label}
+                          </label>
+                          {renderField(field)}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex justify-between mt-8">
+                  <button
+                    type="button"
+                    onClick={prevPage}
+                    disabled={currentPage === 0}
+                    className={`px-4 py-2 rounded-md cursor-pointer ${
+                      currentPage === 0
+                        ? "bg-gray-300 cursor-not-allowed"
+                        : "bg-gray-600 text-white hover:bg-gray-700"
+                    }`}
+                  >
+                    Previous
+                  </button>
+
+                  {currentPage < formPages.length - 1 ? (
+                    <button
+                      type="button"
+                      onClick={nextPage}
+                      className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                     >
-                      <label
-                        htmlFor={field.name}
-                        className="block mb-2 font-medium text-gray-700"
-                      >
-                        {field.label}
-                      </label>
-                      {renderField(field)}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
+                      Next
+                    </button>
+                  ) : (
+                    <button
+                      type="button" // Change from "submit" to "button"
+                      onClick={handleSubmit} // Add this onClick handler
+                      disabled={loading}
+                      className="cursor-pointer px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-green-300"
+                    >
+                      {loading ? "Processing..." : "Get Results"}
+                    </button>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                  Alzheimer's Detection Results
+                </h2>
 
-            <div className="flex justify-between mt-8">
-              <button
-                type="button"
-                onClick={prevPage}
-                disabled={currentPage === 0}
-                className={`px-4 py-2 rounded-md cursor-pointer ${
-                  currentPage === 0
-                    ? "bg-gray-300 cursor-not-allowed"
-                    : "bg-gray-600 text-white hover:bg-gray-700"
-                }`}
-              >
-                Previous
-              </button>
-
-              {currentPage < formPages.length - 1 ? (
-                <button
-                  type="button"
-                  onClick={nextPage}
-                  className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                <div
+                  className={`p-4 mb-6 rounded-md ${
+                    result.prediction === 1
+                      ? "bg-red-100 border border-red-400"
+                      : "bg-green-100 border border-green-400"
+                  }`}
                 >
-                  Next
-                </button>
-              ) : (
-                <ResultBtn />
-              )}
-            </div>
+                  <h3 className="text-xl font-semibold mb-2">
+                    {result.prediction === 1
+                      ? "Positive: Alzheimer's Detected"
+                      : "Negative: Alzheimer's Not Detected"}
+                  </h3>
+                  <p className="text-gray-700">
+                    The model predicts a {(result.probability * 100).toFixed(2)}
+                    % probability of Alzheimer's disease.
+                  </p>
+                </div>
+
+                <div className="mb-6">
+                  <h4 className="font-semibold text-gray-700 mb-2">
+                    Model Used:
+                  </h4>
+                  <p>
+                    {result.model_used === "XGBoost"
+                      ? "XGBoost"
+                      : result.model_used === "Random Forest"
+                      ? "Random Forest"
+                      : "Logistic Regression"}
+                  </p>
+                </div>
+
+                <div className="mb-6">
+                  <h4 className="font-semibold text-gray-700 mb-2">
+                    Patient Information:
+                  </h4>
+                  <p>
+                    Name: {formData.firstName} {formData.lastName}
+                  </p>
+                  <p>Age: {formData.age}</p>
+                  <p>Gender: {formData.gender}</p>
+                </div>
+
+                <div className="flex justify-between">
+                  <button
+                    type="button"
+                    onClick={() => setResult(null)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  >
+                    Go Back to Form
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData({
+                        // Reset form data to initial state
+                        firstName: "",
+                        lastName: "",
+                        age: "",
+                        gender: "",
+                        ethnicity: "",
+                        education: "",
+                        familyHistoryOfAlzheimers: "",
+                        smoking: "",
+                        alcoholConsumption: "",
+                        physicalActivity: "",
+                        dietQuality: "",
+                        sleepQuality: "",
+                        functionalAssessment: "",
+                        memoryComplaints: "",
+                        behavioralProblems: "",
+                        ADL: "",
+                        confusion: "",
+                        disorientation: "",
+                        personalityChanges: "",
+                        difficultyCompletingTasks: "",
+                        forgetfulness: "",
+                        BMI: "",
+                        depression: "",
+                        cardiovascularDisease: "",
+                        diabetes: "",
+                        headInjury: "",
+                        hyperTension: "",
+                        systolicBP: "",
+                        diastolicBP: "",
+                        cholesterolTotal: "",
+                        cholesterolLDL: "",
+                        cholesterolHDL: "",
+                        cholesterolTriglycerides: "",
+                        MMSE: "",
+                        model: "XGBoost",
+                      })
+                      setCurrentPage(0)
+                      setResult(null)
+                    }}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                  >
+                    Start New Assessment
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                <p>
+                  <strong>Error:</strong> {error}
+                </p>
+                <p className="mt-2">Please check your inputs and try again.</p>
+              </div>
+            )}
           </form>
         </div>
       </div>

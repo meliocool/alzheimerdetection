@@ -1,4 +1,4 @@
-export default function ResultBtn() {
+export default function ResultBtn({ disabled }) {
   return (
     <>
       <button
@@ -24,8 +24,15 @@ export default function ResultBtn() {
           <div className="modal-action">
             <form method="dialog">
               {/* if there is a button in form, it will close the modal */}
-              <button className="cursor-pointer px-4 mx-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-                See Result
+              <button
+                disabled={disabled}
+                className={`cursor-pointer px-4 mx-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 ${
+                  disabled
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-green-600 hover:bg-green-700"
+                }`}
+              >
+                {disabled ? "Processing.." : "See Result"}
               </button>
             </form>
           </div>
