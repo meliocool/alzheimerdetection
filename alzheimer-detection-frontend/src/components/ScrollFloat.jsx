@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react"
+import { useEffect, useRef } from "react"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 
@@ -8,7 +8,6 @@ const ScrollFloat = ({
   children,
   scrollContainerRef,
   containerClassName = "",
-  textClassName = "",
   animationDuration = 1,
   ease = "back.inOut(2)",
   scrollStart = "center bottom+=50%",

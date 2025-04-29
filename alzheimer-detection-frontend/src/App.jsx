@@ -6,6 +6,7 @@ import Hero from "./components/Hero.jsx"
 import FinalForm from "./components/Form.jsx"
 import Footer from "./components/Footer.jsx"
 import AboutUs from "./components/AboutUs.jsx"
+import DataAnalysis from "./components/DataAnalysis.jsx"
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           }
         />
         <Route path="/about" element={<AboutUs />} />
+        <Route path="/datas" element={<DataAnalysis />} />
       </Routes>
       <Footer />
     </Router>

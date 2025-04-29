@@ -15,48 +15,40 @@ export default function FinalForm() {
 function Form() {
   const [currentPage, setCurrentPage] = useState(0)
   const [formData, setFormData] = useState({
-    // Personal Information
     firstName: "",
     lastName: "",
-    age: "",
+    Age: "",
     gender: "",
-    ethnicity: "",
-    education: "",
-    familyHistoryOfAlzheimers: "",
-
-    // Daily Routines
-    smoking: "",
-    alcoholConsumption: "",
-    physicalActivity: "",
-    dietQuality: "",
-    sleepQuality: "",
-    functionalAssessment: "",
-    memoryComplaints: "",
-    behavioralProblems: "",
+    Ethnicity: "",
+    Education: "",
+    FamilyHistoryAlzheimers: "",
+    Smoking: "",
+    AlcoholConsumption: "",
+    PhysicalActivity: "",
+    DietQuality: "",
+    SleepQuality: "",
+    FunctionalAssessment: "",
+    MemoryComplaints: "",
+    BehavioralProblems: "",
     ADL: "",
-    confusion: "",
-    disorientation: "",
-    personalityChanges: "",
-    difficultyCompletingTasks: "",
-    forgetfulness: "",
-
-    // Medical History
+    Confusion: "",
+    Disorientation: "",
+    PersonalityChanges: "",
+    DifficultyCompletingTasks: "",
+    Forgetfulness: "",
     BMI: "",
-    depression: "",
-    cardiovascularDisease: "",
-    diabetes: "",
-    headInjury: "",
-    hyperTension: "",
-    systolicBP: "",
-    diastolicBP: "",
-    cholesterolTotal: "",
-    cholesterolLDL: "",
-    cholesterolHDL: "",
-    cholesterolTriglycerides: "",
+    Depression: "",
+    CardiovascularDisease: "",
+    Diabetes: "",
+    HeadInjury: "",
+    Hypertension: "",
+    SystolicBP: "",
+    DiastolicBP: "",
+    CholesterolTotal: "",
+    CholesterolLDL: "",
+    CholesterolHDL: "",
+    CholesterolTriglycerides: "",
     MMSE: "",
-
-    // Model Selection
-    model: "XGBoost",
   })
 
   const [loading, setLoading] = useState(false)
@@ -79,7 +71,7 @@ function Form() {
       fields: [
         { name: "firstName", label: "First Name", type: "text" },
         { name: "lastName", label: "Last Name", type: "text" },
-        { name: "age", label: "Age", type: "number" },
+        { name: "Age", label: "Age", type: "number" },
         {
           name: "gender",
           label: "Gender",
@@ -88,21 +80,21 @@ function Form() {
           columnClass: "col-span-1", // For two-column layout
         },
         {
-          name: "ethnicity",
+          name: "Ethnicity",
           label: "Ethnicity",
           type: "select",
           options: ["", "Caucasian", "African American", "Asian", "Other"],
           columnClass: "col-span-1", // For two-column layout
         },
         {
-          name: "education",
+          name: "Education",
           label: "Education Level",
           type: "select",
-          options: ["", "Elementary", "Middle", "High", "Bachelor's", "Higher"],
+          options: ["", "High", "Bachelor's", "Higher"],
           columnClass: "col-span-1", // For two-column layout
         },
         {
-          name: "familyHistoryOfAlzheimers",
+          name: "FamilyHistoryAlzheimers",
           label: "Does anyone in your family has Alzheimer?",
           type: "select",
           options: ["", "Yes", "No"],
@@ -120,86 +112,86 @@ function Form() {
           columnClass: "col-span-1",
         },
         {
-          name: "alcoholConsumption",
+          name: "AlcoholConsumption",
           label: "Alcohol Consumption",
           type: "number",
           columnClass: "col-span-1",
         },
         {
-          name: "physicalActivity",
+          name: "PhysicalActivity",
           label: "Physical Activity",
           type: "number",
           columnClass: "col-span-1",
         },
         {
-          name: "dietQuality",
+          name: "DietQuality",
           label: "Diet Quality",
           type: "number",
           columnClass: "col-span-1",
         },
         {
-          name: "sleepQuality",
+          name: "SleepQuality",
           label: "Sleep Quality",
           type: "number",
           columnClass: "col-span-1",
         },
         {
-          name: "functionalAssessment",
+          name: "FunctionalAssessment",
           label: "How do you function daily?",
           type: "number",
           columnClass: "col-span-1",
         },
         {
-          name: "memoryComplaints",
+          name: "MemoryComplaints",
           label: "Do you have any Memory Complaints?",
           type: "select",
           options: ["", "Yes", "No"],
           columnClass: "col-span-1",
         },
         {
-          name: "behavioralProblems",
+          name: "BehavioralProblems",
           label: "Do you have any Behavioral Problems?",
           type: "select",
           options: ["", "Yes", "No"],
           columnClass: "col-span-1",
         },
         {
-          name: "smoking",
+          name: "Smoking",
           label: "Do you smoke?",
           type: "select",
           options: ["", "Yes", "No"],
           columnClass: "col-span-1",
         },
         {
-          name: "confusion",
+          name: "Confusion",
           label: "Do you have any confusion Problems?",
           type: "select",
           options: ["", "Yes", "No"],
           columnClass: "col-span-1",
         },
         {
-          name: "disorientation",
-          label: "Do you have any diorientation Problems?",
+          name: "Disorientation",
+          label: "Do you have any disorientation Problems?",
           type: "select",
           options: ["", "Yes", "No"],
           columnClass: "col-span-1",
         },
         {
-          name: "personalityChanges",
+          name: "PersonalityChanges",
           label: "Do you notice any Personality Changes??",
           type: "select",
           options: ["", "Yes", "No"],
           columnClass: "col-span-1",
         },
         {
-          name: "difficultyCompletingTasks",
+          name: "DifficultyCompletingTasks",
           label: "Do you have any difficulty completing daily tasks?",
           type: "select",
           options: ["", "Yes", "No"],
           columnClass: "col-span-1",
         },
         {
-          name: "forgetfulness",
+          name: "Forgetfulness",
           label: "Do you have any forgetfulness?",
           type: "select",
           options: ["", "Yes", "No"],
@@ -217,72 +209,72 @@ function Form() {
           columnClass: "col-span-1",
         },
         {
-          name: "depression",
+          name: "Depression",
           label: "Depression",
           type: "select",
           options: ["", "Yes", "No"],
           columnClass: "col-span-1",
         },
         {
-          name: "cardiovascularDisease",
+          name: "CardiovascularDisease",
           label: "Do you have any Cardiovascular Diseases?",
           type: "select",
           options: ["", "Yes", "No"],
           columnClass: "col-span-1",
         },
         {
-          name: "diabetes",
+          name: "Diabetes",
           label: "Do you have any history of Diabetes?",
           type: "select",
           options: ["", "Yes", "No"],
           columnClass: "col-span-1",
         },
         {
-          name: "headInjury",
+          name: "HeadInjury",
           label: "Do you have any Head Injury in the past?",
           type: "select",
           options: ["", "Yes", "No"],
           columnClass: "col-span-1",
         },
         {
-          name: "hyperTension",
+          name: "Hypertension",
           label: "Do you have Hyper Tension?",
           type: "select",
           options: ["", "Yes", "No"],
           columnClass: "col-span-1",
         },
         {
-          name: "systolicBP",
+          name: "SystolicBP",
           label: "Systolic BP",
           type: "number",
           columnClass: "col-span-1",
         },
         {
-          name: "diastolicBP",
+          name: "DiastolicBP",
           label: "Diastolic BP",
           type: "number",
           columnClass: "col-span-1",
         },
         {
-          name: "cholesterolTotal",
+          name: "CholesterolTotal",
           label: "Cholesterol Total",
           type: "number",
           columnClass: "col-span-1",
         },
         {
-          name: "cholesterolLDL",
+          name: "CholesterolLDL",
           label: "Cholesterol LDL",
           type: "number",
           columnClass: "col-span-1",
         },
         {
-          name: "cholesterolHDL",
+          name: "CholesterolHDL",
           label: "Cholesterol HDL",
           type: "number",
           columnClass: "col-span-1",
         },
         {
-          name: "cholesterolTriglycerides",
+          name: "CholesterolTriglycerides",
           label: "Cholesterol Triglycerides",
           type: "number",
           columnClass: "col-span-1",
@@ -295,45 +287,52 @@ function Form() {
         },
       ],
     },
-    {
-      title: "Choose Model",
-      fields: [
-        {
-          name: "model",
-          label: "Choose The Model to be used",
-          type: "select",
-          options: ["XGBoost", "Random Forest", "Logistic Regression"],
-          columnClass: "col-span-2",
-        },
-      ],
-    },
   ]
 
   // Prepare data for the model
-  const prepareDataForModel = () => {
-    // Convert Yes/No values to binary
-    const processedData = {}
+  // const prepareDataForModel = () => {
+  //   // Map form data to the expected model input format
+  //   const processedData = {
+  //     // Numerical features
+  //     Age: parseFloat(formData.age) || 0,
+  //     BMI: parseFloat(formData.BMI) || 0,
+  //     AlcoholConsumption: parseFloat(formData.alcoholConsumption) || 0,
+  //     PhysicalActivity: parseFloat(formData.physicalActivity) || 0,
+  //     DietQuality: parseFloat(formData.dietQuality) || 0,
+  //     SleepQuality: parseFloat(formData.sleepQuality) || 0,
+  //     SystolicBP: parseFloat(formData.systolicBP) || 0,
+  //     DiastolicBP: parseFloat(formData.diastolicBP) || 0,
+  //     CholesterolTotal: parseFloat(formData.cholesterolTotal) || 0,
+  //     CholesterolLDL: parseFloat(formData.cholesterolLDL) || 0,
+  //     CholesterolHDL: parseFloat(formData.cholesterolHDL) || 0,
+  //     CholesterolTriglycerides:
+  //       parseFloat(formData.cholesterolTriglycerides) || 0,
+  //     MMSE: parseFloat(formData.MMSE) || 0,
+  //     FunctionalAssessment: parseFloat(formData.functionalAssessment) || 0,
+  //     ADL: parseFloat(formData.ADL) || 0,
 
-    for (const [key, value] of Object.entries(formData)) {
-      if (value === "Yes") {
-        processedData[key] = 1
-      } else if (value === "No") {
-        processedData[key] = 0
-      } else if (value === "" || value === null) {
-        // Handle empty values - might want to use defaults or return an error
-        processedData[key] = 0
-      } else {
-        // Convert numeric strings to numbers
-        if (!isNaN(value) && value !== "") {
-          processedData[key] = parseFloat(value)
-        } else {
-          processedData[key] = value
-        }
-      }
-    }
+  //     // Categorical features (sent as strings)
+  //     Gender: formData.gender || "Male",
+  //     Ethnicity: formData.ethnicity || "Caucasian",
+  //     EducationLevel: formData.education || "None",
+  //     Smoking: formData.smoking || "No",
+  //     FamilyHistoryAlzheimers: formData.familyHistoryOfAlzheimers || "No",
+  //     CardiovascularDisease: formData.cardiovascularDisease || "No",
+  //     Diabetes: formData.diabetes || "No",
+  //     Depression: formData.depression || "No",
+  //     HeadInjury: formData.headInjury || "No",
+  //     Hypertension: formData.hyperTension || "No",
+  //     MemoryComplaints: formData.memoryComplaints || "No",
+  //     BehavioralProblems: formData.behavioralProblems || "No",
+  //     Confusion: formData.confusion || "No",
+  //     Disorientation: formData.disorientation || "No",
+  //     PersonalityChanges: formData.personalityChanges || "No",
+  //     DifficultyCompletingTasks: formData.difficultyCompletingTasks || "No",
+  //     Forgetfulness: formData.forgetfulness || "No",
+  //   }
 
-    return processedData
-  }
+  //   return processedData
+  // }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -341,29 +340,68 @@ function Form() {
     setError(null)
 
     try {
-      const processedData = prepareDataForModel()
-      const modelName = formData.model
+      // Format data before sending
+      const processedData = {
+        Age: parseFloat(formData.Age) || 0,
+        BMI: parseFloat(formData.BMI) || 0,
+        AlcoholConsumption: parseFloat(formData.AlcoholConsumption) || 0,
+        PhysicalActivity: parseFloat(formData.PhysicalActivity) || 0,
+        DietQuality: parseFloat(formData.DietQuality) || 0,
+        SleepQuality: parseFloat(formData.SleepQuality) || 0,
+        SystolicBP: parseFloat(formData.SystolicBP) || 0,
+        DiastolicBP: parseFloat(formData.DiastolicBP) || 0,
+        CholesterolTotal: parseFloat(formData.CholesterolTotal) || 0,
+        CholesterolLDL: parseFloat(formData.CholesterolLDL) || 0,
+        CholesterolHDL: parseFloat(formData.CholesterolHDL) || 0,
+        CholesterolTriglycerides:
+          parseFloat(formData.CholesterolTriglycerides) || 0,
+        MMSE: parseFloat(formData.MMSE) || 0,
+        FunctionalAssessment: parseFloat(formData.FunctionalAssessment) || 0,
+        ADL: parseFloat(formData.ADL) || 0,
+
+        // Categorical features
+        Gender: formData.gender,
+        Ethnicity: formData.Ethnicity,
+        EducationLevel: formData.Education,
+        Smoking: formData.Smoking,
+        FamilyHistoryAlzheimers: formData.FamilyHistoryAlzheimers,
+        CardiovascularDisease: formData.CardiovascularDisease,
+        Diabetes: formData.Diabetes,
+        Depression: formData.Depression,
+        HeadInjury: formData.HeadInjury,
+        Hypertension: formData.Hypertension,
+        MemoryComplaints: formData.MemoryComplaints,
+        BehavioralProblems: formData.BehavioralProblems,
+        Confusion: formData.Confusion,
+        Disorientation: formData.Disorientation,
+        PersonalityChanges: formData.PersonalityChanges,
+        DifficultyCompletingTasks: formData.DifficultyCompletingTasks,
+        Forgetfulness: formData.Forgetfulness,
+      }
+
+      console.log("Sending data:", processedData) // Debug log
 
       const response = await fetch("http://localhost:5000/api/predict", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          features: processedData,
-          model: modelName,
-        }),
+        body: JSON.stringify(processedData),
       })
 
       if (!response.ok) {
-        throw new Error(`Server responded with status: ${response.status}`)
+        const errorData = await response.json()
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`
+        )
       }
 
       const data = await response.json()
+      console.log("Received response:", data) // Debug log
       setResult(data)
-    } catch (error) {
-      console.error("Error:", error)
-      setError(error.message || "An error occurred during prediction")
+    } catch (err) {
+      setError(err.message)
+      console.error("Error:", err)
     } finally {
       setLoading(false)
     }
@@ -579,18 +617,11 @@ function Form() {
                     The model predicts a {(result.probability * 100).toFixed(2)}
                     % probability of Alzheimer's disease.
                   </p>
-                </div>
-
-                <div className="mb-6">
-                  <h4 className="font-semibold text-gray-700 mb-2">
-                    Model Used:
-                  </h4>
-                  <p>
-                    {result.model_used === "XGBoost"
-                      ? "XGBoost"
-                      : result.model_used === "Random Forest"
-                      ? "Random Forest"
-                      : "Logistic Regression"}
+                  <p className="text-gray-700">
+                    Interpretation: {result.interpretation}
+                  </p>
+                  <p className="text-gray-700">
+                    Confidence: {result.confidence}
                   </p>
                 </div>
 
@@ -601,7 +632,7 @@ function Form() {
                   <p>
                     Name: {formData.firstName} {formData.lastName}
                   </p>
-                  <p>Age: {formData.age}</p>
+                  <p>Age: {formData.Age}</p>
                   <p>Gender: {formData.gender}</p>
                 </div>
 
@@ -653,7 +684,7 @@ function Form() {
                         cholesterolHDL: "",
                         cholesterolTriglycerides: "",
                         MMSE: "",
-                        model: "XGBoost",
+                        model: "Random Forest",
                       })
                       setCurrentPage(0)
                       setResult(null)

@@ -1,6 +1,8 @@
 import { useRef, useEffect, useState } from "react"
 import { useSpring, animated } from "@react-spring/web"
 
+const AnimatedDiv = animated.div
+
 const AnimatedContent = ({
   children,
   distance = 100,
@@ -58,9 +60,9 @@ const AnimatedContent = ({
   })
 
   return (
-    <animated.div ref={ref} style={springProps}>
+    <AnimatedDiv ref={ref} style={springProps}>
       {children}
-    </animated.div>
+    </AnimatedDiv>
   )
 }
 

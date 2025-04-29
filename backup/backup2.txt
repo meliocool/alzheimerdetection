@@ -1,0 +1,381 @@
+#split data into features and target
+X = df.drop(columns = ['Diagnosis'])
+y = df['Diagnosis']
+
+#split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 42, shuffle = True)
+
+#define hyperparameter grids for each model
+param_grids = {
+    'Decision Tree': {'max_depth': [3, 5, 7, 12, None]},
+    'Random Forest': {'n_estimators': [50, 100, 200], 'max_depth': [3, 5, 7, 12, None]},
+    'K-Nearest Neighbors': {'n_neighbors': [3, 5, 7]},
+    'Logistic Regression': {'C': [0.1, 1, 10]},
+    'Support Vector Machine': {'C': [0.1, 1, 10], 'gamma': [0.1, 1, 'scale', 'auto']},
+    'XGBoost': {'n_estimators': [50, 100, 200], 'learning_rate': [0.01, 0.1, 1], 'max_depth': [3, 5, 7]},
+    'CatBoost': {'iterations': [50, 100, 200], 'learning_rate': [0.01, 0.1, 1]}
+}
+
+#instantiate classification models with default parameters
+models = {
+    'Decision Tree': DecisionTreeClassifier(),
+    'Random Forest': RandomForestClassifier(),
+    'K-Nearest Neighbors': KNeighborsClassifier(),
+    'Logistic Regression': LogisticRegression(),
+    'Support Vector Machine': SVC(),
+    'XGBoost': XGBClassifier(),
+    'CatBoost': CatBoostClassifier(verbose=0)
+}
+
+#fit models using GridSearchCV for hyperparameter tuning
+for name, model in models.items():
+    grid_search = GridSearchCV(model, param_grids[name], cv = 5, scoring = 'f1')
+    grid_search.fit(X_train, y_train)
+    best_model = grid_search.best_estimator_
+    y_pred = best_model.predict(X_test)
+    report = classification_report(y_test, y_pred)
+    print(f'{name} Classification Report:\n{report}\nBest Parameters: {grid_search.best_params_}\n')
+
+
+
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import pandas as pd
+import numpy as np
+import os
+import time
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
+import joblib  # Remove pickle import since we're using joblib
+import json
+
+app = Flask(__name__)
+CORS(app)
+
+# Path to the models directory
+MODELS_DIR = os.path.join(os.path.dirname(__file__), "models")
+
+# Dictionary to store the XGBoost model
+xgboost_model = None
+
+# Global variables for scalers
+min_max_scaler = None
+standard_scaler = None
+
+# Define custom labels for categorical features
+custom_labels = {
+    'Gender': ['Male', 'Female'],
+    'Ethnicity': ['Caucasian', 'African American', 'Asian', 'Other'],
+    'EducationLevel': ['None', 'High School', 'Bachelor\'s', 'Higher'],
+    'Smoking': ['No', 'Yes'],
+    'FamilyHistoryAlzheimers': ['No', 'Yes'],
+    'CardiovascularDisease': ['No', 'Yes'],
+    'Diabetes': ['No', 'Yes'],
+    'Depression': ['No', 'Yes'],
+    'HeadInjury': ['No', 'Yes'],
+    'Hypertension': ['No', 'Yes'],
+    'MemoryComplaints': ['No', 'Yes'],
+    'BehavioralProblems': ['No', 'Yes'],
+    'Confusion': ['No', 'Yes'],
+    'Disorientation': ['No', 'Yes'],
+    'PersonalityChanges': ['No', 'Yes'],
+    'DifficultyCompletingTasks': ['No', 'Yes'],
+    'Forgetfulness': ['No', 'Yes']
+}
+
+def load_xgboost_and_scalers():
+    """Load the XGBoost model and scalers"""
+    global xgboost_model, min_max_scaler, standard_scaler
+    try:
+        # Load XGBoost model
+        model_path = os.path.join(MODELS_DIR, 'XGBoost_best_model.pkl')
+        scaler_mm_path = os.path.join(MODELS_DIR, 'min_max_scaler.pkl')
+        scaler_std_path = os.path.join(MODELS_DIR, 'standard_scaler.pkl')
+
+        if not all(os.path.exists(p) for p in [model_path, scaler_mm_path, scaler_std_path]):
+            print("One or more model files are missing!")
+            return False
+
+        # Load using joblib instead of pickle
+        print("Loading model and scalers...")
+        xgboost_model = joblib.load(model_path)
+        min_max_scaler = joblib.load(scaler_mm_path)
+        standard_scaler = joblib.load(scaler_std_path)
+
+        # Verify the scalers are actually scaler objects
+        if not isinstance(min_max_scaler, MinMaxScaler) or not isinstance(standard_scaler, StandardScaler):
+            print("Loaded scalers are not valid sklearn transformer objects!")
+            return False
+
+        print("Successfully loaded model and scalers")
+        print(f"MinMaxScaler type: {type(min_max_scaler)}")
+        print(f"StandardScaler type: {type(standard_scaler)}")
+        return True
+
+    except Exception as e:
+        print(f"Error loading models and scalers: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+def format_input_data(features):
+    """Format input data to match model requirements"""
+    formatted_data = {}
+    
+    # Define numerical columns with their expected ranges from training data
+    numerical_ranges = {
+        'Age': (0, 100),
+        'BMI': (15, 40),
+        'AlcoholConsumption': (0, 10),
+        'PhysicalActivity': (0, 10),
+        'DietQuality': (0, 10),
+        'SleepQuality': (0, 10),
+        'SystolicBP': (90, 180),
+        'DiastolicBP': (60, 120),
+        'CholesterolTotal': (100, 300),
+        'CholesterolLDL': (50, 200),
+        'CholesterolHDL': (20, 100),
+        'CholesterolTriglycerides': (50, 500),
+        'MMSE': (0, 30),
+        'FunctionalAssessment': (0, 10),
+        'ADL': (0, 10)
+    }
+    
+    # Handle numerical features with range checking
+    for col, (min_val, max_val) in numerical_ranges.items():
+        value = float(features.get(col, 0))
+        # Clip values to expected ranges
+        value = max(min_val, min(value, max_val))
+        formatted_data[col] = value
+    
+    # Handle categorical features with strict mapping
+    for key, possible_values in custom_labels.items():
+        value = features.get(key, possible_values[0])
+        try:
+            # Convert string values to numerical indices
+            formatted_data[key] = possible_values.index(value)
+        except ValueError:
+            print(f"Unknown value '{value}' for {key}, defaulting to {possible_values[0]}")
+            formatted_data[key] = 0
+            
+    return formatted_data
+
+@app.route('/api/predict', methods=['POST'])
+def predict():
+    start_time = time.time()
+    
+    try:
+        data = request.json
+        features = data.get('features', {})
+        
+        print("\n=== Input Data Processing ===")
+        print("1. Raw input features:")
+        print(json.dumps(features, indent=2))
+        
+        # Format input data
+        formatted_data = format_input_data(features)
+        print("\n2. Formatted data (after categorical encoding):")
+        print(json.dumps(formatted_data, indent=2))
+        
+        input_df = pd.DataFrame([formatted_data])
+
+        # Get the exact same column order as training data
+        if hasattr(xgboost_model, 'feature_names_in_'):
+            expected_features = xgboost_model.feature_names_in_
+            print("\n3. Expected feature order from model:")
+            print(expected_features)
+            
+            # Reorder columns to match training data
+            input_df = input_df[expected_features]
+        
+        print("\n4. DataFrame with correct feature order:")
+        print(input_df.to_string())
+
+        numerical_columns = [
+            'Age', 'BMI', 'AlcoholConsumption', 'PhysicalActivity', 'DietQuality',
+            'SleepQuality', 'SystolicBP', 'DiastolicBP', 'CholesterolTotal',
+            'CholesterolLDL', 'CholesterolHDL', 'CholesterolTriglycerides',
+            'MMSE', 'FunctionalAssessment', 'ADL'
+        ]
+
+        # Create a copy of numerical data
+        numerical_data = input_df[numerical_columns].copy()
+        print("\n5. Numerical data before scaling:")
+        print(numerical_data.to_string())
+        
+        # Scale numerical features in same sequence as training
+        numerical_scaled = numerical_data.copy()
+        numerical_scaled = pd.DataFrame(
+            min_max_scaler.transform(numerical_scaled),
+            columns=numerical_columns
+        )
+        print("\n5a. After MinMax scaling:")
+        print(numerical_scaled.to_string())
+        
+        numerical_scaled = pd.DataFrame(
+            standard_scaler.transform(numerical_scaled),
+            columns=numerical_columns,
+            index=numerical_data.index
+        )
+        print("\n5b. After Standard scaling:")
+        print(numerical_scaled.to_string())
+        
+        # Update original DataFrame with scaled values
+        input_df[numerical_columns] = numerical_scaled
+
+        # Ensure column order matches exactly
+        if hasattr(xgboost_model, 'feature_names_in_'):
+            expected_features = xgboost_model.feature_names_in_
+            missing_features = set(expected_features) - set(input_df.columns)
+            if missing_features:
+                raise ValueError(f"Missing features: {missing_features}")
+            input_df = input_df[expected_features]
+        
+        print("\n6. Final data being sent to model:")
+        print(input_df.to_string())
+        print("\nFeature order:", list(input_df.columns))
+
+        # Make prediction
+        prediction = int(xgboost_model.predict(input_df)[0])
+        probabilities = xgboost_model.predict_proba(input_df)
+        
+        print(f"{probabilities[0]}")
+        
+        processing_time = time.time() - start_time
+
+        return jsonify({
+            'status': 'success',
+            'prediction': prediction,
+            'probability_not_alzheimer': float(probabilities[0][0]),
+            'probability_alzheimer': float(probabilities[0][1]),
+            'processing_time': round(processing_time, 2)
+        })
+
+    except Exception as e:
+        print(f"Error during prediction: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+# Initialize on startup
+if not load_xgboost_and_scalers():
+    print("Failed to load required models and scalers")
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Health check endpoint to verify the server is running"""
+    return jsonify({
+        'status': 'ok',
+        'message': 'Server is running',
+        'model_loaded': bool(xgboost_model)
+    })
+
+# Initialize by loading the XGBoost model and scalers
+print("Initializing server and loading XGBoost model and scalers...")
+load_xgboost_and_scalers()
+
+if __name__ == '__main__':
+    if load_xgboost_and_scalers():
+        app.run(debug=True, port=5000)
+    else:
+        print("Failed to start Flask server due to model/scaler loading error.")
+
+
+
+
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import pandas as pd
+import joblib
+import os
+import time
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
+
+app = Flask(__name__)
+CORS(app)
+
+# Load models and scalers
+model = joblib.load("xgboost_model_v3.pkl")
+min_max_scaler = joblib.load("min_max_scaler_v3.pkl")
+standard_scaler = joblib.load("standard_scaler_v3.pkl")
+
+# Categorical label mappings
+label_mappings = {
+    'Gender': ['Male', 'Female'],
+    'Ethnicity': ['Caucasian', 'African American', 'Asian', 'Other'],
+    'EducationLevel': ['None', 'High School', "Bachelor's", 'Higher'],
+    'Smoking': ['No', 'Yes'],
+    'FamilyHistoryAlzheimers': ['No', 'Yes'],
+    'CardiovascularDisease': ['No', 'Yes'],
+    'Diabetes': ['No', 'Yes'],
+    'Depression': ['No', 'Yes'],
+    'HeadInjury': ['No', 'Yes'],
+    'Hypertension': ['No', 'Yes'],
+    'MemoryComplaints': ['No', 'Yes'],
+    'BehavioralProblems': ['No', 'Yes'],
+    'Confusion': ['No', 'Yes'],
+    'Disorientation': ['No', 'Yes'],
+    'PersonalityChanges': ['No', 'Yes'],
+    'DifficultyCompletingTasks': ['No', 'Yes'],
+    'Forgetfulness': ['No', 'Yes']
+}
+
+numerical_cols = [
+    'Age', 'BMI', 'AlcoholConsumption', 'PhysicalActivity', 'DietQuality',
+    'SleepQuality', 'SystolicBP', 'DiastolicBP', 'CholesterolTotal',
+    'CholesterolLDL', 'CholesterolHDL', 'CholesterolTriglycerides',
+    'MMSE', 'FunctionalAssessment', 'ADL', 'MemoryComplaints', 'BehavioralProblems'
+]
+
+@app.route('/api/predict', methods=['POST'])
+def predict():
+    start = time.time()
+    data = request.json.get('features', {})
+    
+    # Format input
+    formatted = {}
+
+    # Handle numerical values with fallback
+    for col in numerical_cols:
+        val = data.get(col, 0)
+        try:
+            formatted[col] = float(val)
+        except ValueError:
+            formatted[col] = 0.0
+
+    # Encode categorical values
+    for col, values in label_mappings.items():
+        raw_val = data.get(col, values[0])
+        formatted[col] = values.index(raw_val) if raw_val in values else 0
+
+    df = pd.DataFrame([formatted])
+
+    # Scale numerical values
+    scaled = pd.DataFrame(min_max_scaler.transform(df[numerical_cols]), columns=numerical_cols)
+    scaled = pd.DataFrame(standard_scaler.transform(scaled), columns=numerical_cols)
+    df[numerical_cols] = scaled
+
+    # Ensure correct feature order
+    if hasattr(model, 'feature_names_in_'):
+        df = df[model.feature_names_in_]
+
+    # Predict
+    pred = int(model.predict(df)[0])
+    prob = model.predict_proba(df)[0]
+
+    print(pred)
+    print(prob)
+
+    return jsonify({
+        "status": "success",
+        "prediction": pred,
+        "probability_not_alzheimer": float(prob[0]),
+        "probability_alzheimer": float(prob[1]),
+        "processing_time": round(time.time() - start, 2)
+    })
+
+if __name__ == '__main__':
+    app.run(debug=True)
+

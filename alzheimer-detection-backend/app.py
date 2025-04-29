@@ -1,317 +1,201 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import pickle
 import pandas as pd
 import numpy as np
+import joblib
 import os
 import time
+import json
 
 app = Flask(__name__)
-CORS(app)  
-
-# Path to the models directory - adjust if needed
-MODELS_DIR = "models"
-
-# Dictionary to store loaded models
-models = {}
-
-# Global variables for scalers
-min_max_scaler = None
-standard_scaler = None
-
-# Define custom labels for categorical features
-custom_labels = {
-    'Gender': ['Male', 'Female'],
-    'Ethnicity': ['Caucasian', 'African American', 'Asian', 'Other'],
-    'EducationLevel': ['None', 'High School', 'Bachelor\'s', 'Higher'],
-    'Smoking': ['No', 'Yes'],
-    'FamilyHistoryAlzheimers': ['No', 'Yes'],
-    'CardiovascularDisease': ['No', 'Yes'],
-    'Diabetes': ['No', 'Yes'],
-    'Depression': ['No', 'Yes'],
-    'HeadInjury': ['No', 'Yes'],
-    'Hypertension': ['No', 'Yes'],
-    'MemoryComplaints': ['No', 'Yes'],
-    'BehavioralProblems': ['No', 'Yes'],
-    'Confusion': ['No', 'Yes'],
-    'Disorientation': ['No', 'Yes'],
-    'PersonalityChanges': ['No', 'Yes'],
-    'DifficultyCompletingTasks': ['No', 'Yes'],
-    'Forgetfulness': ['No', 'Yes']
-}
-
-def load_models_and_scalers():
-    """Load all ML models and scalers from the models directory"""
-    global models, min_max_scaler, standard_scaler
-
-    # Load models
-    model_files = {
-        "XGBoost": "XGBoost_best_model.pkl",
-        "Random Forest": "Random Forest_best_model.pkl",
-        "Logistic Regression": "Logistic Regression_best_model.pkl"
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["http://localhost:5173"],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
     }
+})
 
-    for model_name, file_name in model_files.items():
-        file_path = os.path.join(MODELS_DIR, file_name)
-        if os.path.exists(file_path):
-            try:
-                with open(file_path, 'rb') as f:
-                    models[model_name] = pickle.load(f)
-                print(f"Loaded model: {model_name}")
-            except Exception as e:
-                print(f"Error loading {model_name}: {e}")
-        else:
-            print(f"Model file not found: {file_path}")
+# Constants
+MODELS_DIR = './random_forest'
 
-    # Load scalers
+# Load model and scaler
+def load_model_and_scaler():
+    """Load the Random Forest model and scaler"""
     try:
-        with open(os.path.join(MODELS_DIR, 'min_max_scaler.pkl'), 'rb') as f:
-            min_max_scaler = pickle.load(f)
-        print("Loaded MinMaxScaler")
+        model_path = os.path.join(MODELS_DIR, 'alzheimer_model.pkl')
+        scaler_path = os.path.join(MODELS_DIR, 'scaler.pkl')
+
+        if not all(os.path.exists(p) for p in [model_path, scaler_path]):
+            print("Model or scaler file is missing!")
+            return None, None
+
+        model = joblib.load(model_path)
+        scaler = joblib.load(scaler_path)
+        
+        print("Model and scaler loaded successfully!")
+        return model, scaler
     except Exception as e:
-        print(f"Error loading MinMaxScaler: {e}")
+        print(f"Error loading model and scaler: {e}")
+        return None, None
 
-    try:
-        with open(os.path.join(MODELS_DIR, 'standard_scaler.pkl'), 'rb') as f:
-            standard_scaler = pickle.load(f)
-        print("Loaded StandardScaler")
-    except Exception as e:
-        print(f"Error loading StandardScaler: {e}")
+# Initialize model and scaler
+print("Initializing server and loading model...")
+model, scaler = load_model_and_scaler()
 
-    print(f"Loaded {len(models)} models and scalers")
-
-def format_input_data(features):
+def format_input_data(data):
     """Format input data to match model requirements"""
-    field_mapping = {
-        'gender': 'Gender',
-        'age': 'Age',
-        'bmi': 'BMI',
-        'alcoholConsumption': 'AlcoholConsumption',
-        'physicalActivity': 'PhysicalActivity',
-        'dietQuality': 'DietQuality',
-        'sleepQuality': 'SleepQuality',
-        'systolicBP': 'SystolicBP',
-        'diastolicBP': 'DiastolicBP',
-        'cholesterolTotal': 'CholesterolTotal',
-        'cholesterolLDL': 'CholesterolLDL',
-        'cholesterolHDL': 'CholesterolHDL',
-        'cholesterolTriglycerides': 'CholesterolTriglycerides',
-        'mmse': 'MMSE',
-        'functionalAssessment': 'FunctionalAssessment',
-        'adl': 'ADL',
-        'ethnicity': 'Ethnicity',
-        'education': 'EducationLevel',
-        'smoking': 'Smoking',
-        'familyHistoryOfAlzheimers': 'FamilyHistoryAlzheimers',
-        'cardiovascularDisease': 'CardiovascularDisease',
-        'diabetes': 'Diabetes',
-        'depression': 'Depression',
-        'headInjury': 'HeadInjury',
-        'hyperTension': 'Hypertension',
-        'memoryComplaints': 'MemoryComplaints',
-        'behavioralProblems': 'BehavioralProblems',
-        'confusion': 'Confusion',
-        'disorientation': 'Disorientation',
-        'personalityChanges': 'PersonalityChanges',
-        'difficultyCompletingTasks': 'DifficultyCompletingTasks',
-        'forgetfulness': 'Forgetfulness'
-    }
-
-    # List of binary fields (Yes/No fields)
-    binary_fields = [
-        'Smoking', 'FamilyHistoryAlzheimers', 'CardiovascularDisease',
-        'Diabetes', 'Depression', 'HeadInjury', 'Hypertension',
-        'MemoryComplaints', 'BehavioralProblems', 'Confusion',
-        'Disorientation', 'PersonalityChanges', 'DifficultyCompletingTasks',
-        'Forgetfulness'
-    ]
-
-    # Convert education values if needed
-    education_mapping = {
-        "Elementary": "None",
-        "Middle": "None",
-        "High": "High School",
-        "Bachelor's": "Bachelor's",
-        "Higher": "Higher"
-    }
-
-    # Initialize formatted_data with default values for all required columns
-    formatted_data = {col: 0 for col in field_mapping.values()}
-
-    # Process each field from the form
-    for form_field, value in features.items():
-        # Skip non-feature fields
-        if form_field in ['firstName', 'lastName', 'model']:
-            continue
-
-        # Map the field name if needed
-        model_field = field_mapping.get(form_field, form_field)
-
-        # Handle binary fields (convert to appropriate format)
-        if model_field in binary_fields:
-            if value == 1 or value == "Yes":
-                formatted_data[model_field] = "Yes"
-            else:
-                formatted_data[model_field] = "No"
-        # Handle education field
-        elif form_field == 'education':
-            formatted_data[model_field] = education_mapping.get(value, "None")
-        # Handle other fields (numerical fields)
-        else:
-            # Numeric fields pass through as-is
-            if isinstance(value, (int, float)) or (isinstance(value, str) and value.replace('.', '', 1).isdigit()):
-                formatted_data[model_field] = float(value) if value != '' else 0
-            else:
-                formatted_data[model_field] = value
-
-    # Convert categorical features to numerical codes
-    for key in list(formatted_data.keys()):
-        if key in custom_labels:
-            possible_values = custom_labels[key]
-            current_value = formatted_data[key]
-            try:
-                index = possible_values.index(current_value)
-                formatted_data[key] = index
-            except ValueError:
-                # Handle unknown values by defaulting to 0
-                formatted_data[key] = 0
-                print(f"Unknown value '{current_value}' for {key}, defaulting to 0")
-
-    return formatted_data
-
-@app.route('/api/predict', methods=['POST'])
-def predict():
-    start_time = time.time()
-
-    # Get the data from the request
-    data = request.json
-    features = data.get('features', {})
-    model_name = data.get('model', 'XGBoost')
-
-    # Log received data for debugging
-    print(f"Received request for model: {model_name}")
-    print(f"Raw features: {features}")
-
-    # Check if we have the requested model
-    if model_name not in models:
-        # If model isn't loaded, try to load it
-        if model_name in ["XGBoost", "Random Forest", "Logistic Regression"]:
-            load_models_and_scalers()  # Try loading all models and scalers again
-
-            # If still not loaded, return an error
-            if model_name not in models:
-                return jsonify({
-                    'status': 'error',
-                    'message': f'Model {model_name} could not be loaded'
-                }), 500
-        else:
-            return jsonify({
-                'status': 'error',
-                'message': f'Unknown model: {model_name}'
-            }), 400
-
     try:
-        formatted_data = format_input_data(features)
-        print(f"Formatted data: {formatted_data}")
-
-        # Create DataFrame from formatted data
-        input_df = pd.DataFrame([formatted_data])
-
-        # Define numerical columns
-        numerical_columns = [
-            'Age', 'BMI', 'AlcoholConsumption', 'PhysicalActivity', 'DietQuality',
-            'SleepQuality', 'SystolicBP', 'DiastolicBP', 'CholesterolTotal',
-            'CholesterolLDL', 'CholesterolHDL', 'CholesterolTriglycerides',
-            'MMSE', 'FunctionalAssessment', 'ADL'
+        # Define the exact feature order from training
+        feature_order = [
+            'Age', 'Gender', 'Ethnicity', 'EducationLevel', 'BMI', 'Smoking',
+            'AlcoholConsumption', 'PhysicalActivity', 'DietQuality', 'SleepQuality',
+            'FamilyHistoryAlzheimers', 'CardiovascularDisease', 'Diabetes',
+            'Depression', 'HeadInjury', 'Hypertension', 'SystolicBP', 'DiastolicBP',
+            'CholesterolTotal', 'CholesterolLDL', 'CholesterolHDL',
+            'CholesterolTriglycerides', 'MMSE', 'FunctionalAssessment',
+            'MemoryComplaints', 'BehavioralProblems', 'ADL', 'Confusion',
+            'Disorientation', 'PersonalityChanges', 'DifficultyCompletingTasks',
+            'Forgetfulness'
         ]
 
-        # Check if scalers are loaded
-        if not min_max_scaler or not standard_scaler:
+        # First format the data with exact same encoding as notebook
+        formatted_data = {
+            # Numerical features - exact float values
+            'Age': float(data.get('Age')),
+            'BMI': float(data.get('BMI')),
+            'AlcoholConsumption': float(data.get('AlcoholConsumption')),
+            'PhysicalActivity': float(data.get('PhysicalActivity')),
+            'DietQuality': float(data.get('DietQuality')),
+            'SleepQuality': float(data.get('SleepQuality')),
+            'SystolicBP': float(data.get('SystolicBP')),
+            'DiastolicBP': float(data.get('DiastolicBP')),
+            'CholesterolTotal': float(data.get('CholesterolTotal')),
+            'CholesterolLDL': float(data.get('CholesterolLDL')),
+            'CholesterolHDL': float(data.get('CholesterolHDL')),
+            'CholesterolTriglycerides': float(data.get('CholesterolTriglycerides')),
+            'MMSE': float(data.get('MMSE')),
+            'FunctionalAssessment': float(data.get('FunctionalAssessment')),
+            'ADL': float(data.get('ADL')),
+
+            # Categorical features - match notebook encoding exactly
+            'Gender': 0 if data.get('Gender') == 'Male' else 1,
+            'Ethnicity': {
+                'Caucasian': 0,
+                'African American': 1,
+                'Asian': 2,
+                'Other': 3
+            }.get(data.get('Ethnicity', 'Caucasian')),
+            'EducationLevel': {
+                'None': 0,
+                'High': 1,
+                "Bachelor's": 2,
+                'Higher': 3
+            }.get(data.get('EducationLevel')),
+            
+            # Boolean features - convert to exact integers as in notebook
+            'Smoking': 1 if data.get('Smoking') == 'Yes' else 0,
+            'FamilyHistoryAlzheimers': 1 if data.get('FamilyHistoryAlzheimers') == 'Yes' else 0,
+            'CardiovascularDisease': 1 if data.get('CardiovascularDisease') == 'Yes' else 0,
+            'Diabetes': 1 if data.get('Diabetes') == 'Yes' else 0,
+            'Depression': 1 if data.get('Depression') == 'Yes' else 0,
+            'HeadInjury': 1 if data.get('HeadInjury') == 'Yes' else 0,
+            'Hypertension': 1 if data.get('Hypertension') == 'Yes' else 0,
+            'MemoryComplaints': 1 if data.get('MemoryComplaints') == 'Yes' else 0,
+            'BehavioralProblems': 1 if data.get('BehavioralProblems') == 'Yes' else 0,
+            'Confusion': 1 if data.get('Confusion') == 'Yes' else 0,
+            'Disorientation': 1 if data.get('Disorientation') == 'Yes' else 0,
+            'PersonalityChanges': 1 if data.get('PersonalityChanges') == 'Yes' else 0,
+            'DifficultyCompletingTasks': 1 if data.get('DifficultyCompletingTasks') == 'Yes' else 0,
+            'Forgetfulness': 1 if data.get('Forgetfulness') == 'Yes' else 0
+        }
+
+        # Create DataFrame and ensure exact column order
+        df = pd.DataFrame([formatted_data])
+        df = df[feature_order]
+        print("\nFormatted data matches notebook format:")
+        print(df.to_string())
+        return df.iloc[0].to_dict()
+
+    except Exception as e:
+        print(f"Error formatting data: {e}")
+        raise ValueError(f"Error formatting input data: {str(e)}")
+
+@app.route('/api/predict', methods=['POST', 'OPTIONS'])
+def predict():
+    if request.method == 'OPTIONS':
+        return _build_cors_preflight_response()
+
+    start_time = time.time()
+    
+    try:
+        if not model or not scaler:
             return jsonify({
                 'status': 'error',
-                'message': 'Scalers not loaded'
+                'message': 'Model not loaded'
             }), 500
 
-        # Apply scaling to numerical columns
-        input_df[numerical_columns] = min_max_scaler.transform(input_df[numerical_columns])
-        input_df[numerical_columns] = standard_scaler.transform(input_df[numerical_columns])
-
-        # Get the model
-        model = models[model_name]
-
-        # Handle feature order and missing columns
-        if hasattr(model, 'feature_names_in_'):
-            # Use feature names from the model (e.g., XGBoost)
-            expected_features = model.feature_names_in_
-        else:
-            # Fallback to expected feature order (adjust based on your model's training data)
-            expected_features = numerical_columns + list(custom_labels.keys())
-
-        # Ensure all expected features are present
-        for feature in expected_features:
-            if feature not in input_df.columns:
-                input_df[feature] = 0  # Fill missing features with 0
-
-        # Reorder columns to match expected features
-        input_df = input_df[expected_features]
-
-        # Log the input data being passed to the model
-        print(f"Input data for {model_name}:")
-        print(input_df)
-
+        # Get and format input data
+        data = request.json
+        print("\nReceived data:", json.dumps(data, indent=2))
+        
+        formatted_data = format_input_data(data)
+        print("\nFormatted data:", json.dumps(formatted_data, indent=2))
+        
+        # Convert to DataFrame and scale
+        input_df = pd.DataFrame([formatted_data])
+        print("\nInput DataFrame shape:", input_df.shape)
+        
+        # Scale the data
+        scaled_data = scaler.transform(input_df)
+        print("\nScaled data shape:", scaled_data.shape)
+        
         # Make prediction
-        prediction = int(model.predict(input_df)[0])
-
-        # Get probability if available
-        if hasattr(model, 'predict_proba'):
-            probabilities = model.predict_proba(input_df)
-            # XGBoost returns shape (n_samples, n_classes)
-            probability = float(probabilities[0][1])  # First sample, second class
-        else:
-            probability = 1 if prediction == 1 else 0
+        prediction = int(model.predict(scaled_data)[0])
+        probabilities = model.predict_proba(scaled_data)[0]
+        
+        # Format probabilities with consistent precision
+        alzheimer_prob = float(format(probabilities[1], '.4f'))
+        no_alzheimer_prob = float(format(probabilities[0], '.4f'))
+        
+        print("\nPrediction results:")
+        print(f"Raw prediction: {prediction}")
+        print(f"Raw probabilities: {probabilities}")
+        print(f"Formatted probabilities: No Alzheimer's = {no_alzheimer_prob}, Has Alzheimer's = {alzheimer_prob}")
 
         processing_time = time.time() - start_time
 
-        # Return response
-        response = {
+        response = jsonify({
+            'status': 'success',
             'prediction': prediction,
-            'probability': float(probability),
-            'model_used': model_name,
+            'prediction_label': 'Has Alzheimer\'s' if prediction == 1 else 'No Alzheimer\'s',
+            'probability': alzheimer_prob,  # Using formatted probability
+            'probability_not_alzheimer': no_alzheimer_prob,
+            'probability_alzheimer': alzheimer_prob,
             'processing_time': round(processing_time, 2),
-            'status': 'success'
-        }
-
-        return jsonify(response)
+            'interpretation': 'High risk of Alzheimer\'s' if prediction == 1 else 'Low risk of Alzheimer\'s',
+            'confidence': f"{max(no_alzheimer_prob, alzheimer_prob):.1%}"
+        })
+        
+        return _corsify_actual_response(response)
 
     except Exception as e:
         print(f"Error during prediction: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
+        return _corsify_actual_response(jsonify({
             'status': 'error',
             'message': str(e)
-        }), 500
+        })), 500
 
-@app.route('/api/health', methods=['GET'])
-def health_check():
-    """Health check endpoint to verify the server is running"""
-    return jsonify({
-        'status': 'ok',
-        'message': 'Server is running',
-        'loaded_models': list(models.keys())
-    })
+def _build_cors_preflight_response():
+    response = jsonify({'status': 'success'})
+    response.headers.add('Access-Control-Allow-Origin', 'http://localhost:5173')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    return response
 
-@app.route('/api/models', methods=['GET'])
-def list_models():
-    """List available models"""
-    return jsonify({
-        'available_models': list(models.keys()),
-        'default_model': 'XGBoost' if 'XGBoost' in models else None
-    })
-
-# Initialize by loading models and scalers
-print("Initializing server and loading models and scalers...")
-load_models_and_scalers()
+def _corsify_actual_response(response):
+    response.headers.add('Access-Control-Allow-Origin', 'http://localhost:5173')
+    return response
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)

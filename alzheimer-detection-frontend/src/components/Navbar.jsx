@@ -68,29 +68,9 @@ export default function Navbar() {
         </div>
         <div className="navbar-end hidden lg:flex">
           <ul className="menu menu-horizontal px-1 lg:text-xl md:text-lg sm:text-md text-sm">
-            <li>
-              <details>
-                <summary>Datasets & References</summary>
-                <ul className="p-2">
-                  <li>
-                    <a
-                      href="https://www.kaggle.com/code/adhamtarek147/alzheimer-s-disease-prediction/input"
-                      target="_blank"
-                    >
-                      Kaggle
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="https://ieeexplore.ieee.org/abstract/document/9459692"
-                      target="_blank"
-                    >
-                      Paper
-                    </a>
-                  </li>
-                </ul>
-              </details>
-            </li>
+            {/* <li>
+              <Link to="/datas">Data Analysis and Visualization</Link>
+            </li> */}
             <li>
               <Link to="/about">About us</Link>
             </li>

@@ -1,0 +1,34 @@
+dummy_input = {
+    "Age": 25,
+    "Gender": 1,  # Female
+    "Ethnicity": 0,  # Caucasian
+    "EducationLevel": 2,  # Bachelor's
+    "BMI": 22.5,
+    "Smoking": 0,  # No
+    "AlcoholConsumption": 2.5,
+    "PhysicalActivity": 8.0,
+    "DietQuality": 9.0,
+    "SleepQuality": 8.5,
+    "FamilyHistoryAlzheimers": 0,  # No
+    "CardiovascularDisease": 0,  # No
+    "Diabetes": 0,  # No
+    "Depression": 0,  # No
+    "HeadInjury": 0,  # No
+    "Hypertension": 0,  # No
+    "SystolicBP": 120,
+    "DiastolicBP": 80,
+    "CholesterolTotal": 180.0,
+    "CholesterolLDL": 100.0,
+    "CholesterolHDL": 60.0,
+    "CholesterolTriglycerides": 150.0,
+    "MMSE": 30.0,
+    "FunctionalAssessment": 10.0,
+    "MemoryComplaints": 0,  # No
+    "BehavioralProblems": 0,  # No
+    "ADL": 10.0,
+    "Confusion": 0,  # No
+    "Disorientation": 0,  # No
+    "PersonalityChanges": 0,  # No
+    "DifficultyCompletingTasks": 0,  # No
+    "Forgetfulness": 0  # No
+}
