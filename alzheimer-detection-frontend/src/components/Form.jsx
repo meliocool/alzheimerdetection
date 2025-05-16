@@ -55,7 +55,6 @@ function Form() {
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
 
-  // Update form data
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
     setFormData({
@@ -64,7 +63,6 @@ function Form() {
     })
   }
 
-  // Form pages configuration
   const formPages = [
     {
       title: "Personal Information",
@@ -77,28 +75,28 @@ function Form() {
           label: "Gender",
           type: "select",
           options: ["", "Male", "Female"],
-          columnClass: "col-span-1", // For two-column layout
+          columnClass: "col-span-1",
         },
         {
           name: "Ethnicity",
           label: "Ethnicity",
           type: "select",
           options: ["", "Caucasian", "African American", "Asian", "Other"],
-          columnClass: "col-span-1", // For two-column layout
+          columnClass: "col-span-1",
         },
         {
           name: "Education",
           label: "Education Level",
           type: "select",
           options: ["", "High", "Bachelor's", "Higher"],
-          columnClass: "col-span-1", // For two-column layout
+          columnClass: "col-span-1",
         },
         {
           name: "FamilyHistoryAlzheimers",
           label: "Does anyone in your family has Alzheimer?",
           type: "select",
           options: ["", "Yes", "No"],
-          columnClass: "col-span-1", // For two-column layout
+          columnClass: "col-span-1",
         },
       ],
     },
@@ -321,7 +319,6 @@ function Form() {
     setError(null)
 
     try {
-      // Format data before sending
       const processedData = {
         Age: parseFloat(formData.Age) || 0,
         BMI: parseFloat(formData.BMI) || 0,
@@ -359,12 +356,10 @@ function Form() {
         DifficultyCompletingTasks: formData.DifficultyCompletingTasks,
         Forgetfulness: formData.Forgetfulness,
 
-        // Selected model
         Model: formData.model,
       }
 
-      console.log("Sending data:", processedData) // Debug log
-
+      console.log("Sending data:", processedData)
       const response = await fetch("http://localhost:5000/api/predict", {
         method: "POST",
         headers: {
@@ -381,7 +376,7 @@ function Form() {
       }
 
       const data = await response.json()
-      console.log("Received response:", data) // Debug log
+      console.log("Received response:", data)
       setResult(data)
     } catch (err) {
       setError(err.message)
@@ -404,7 +399,6 @@ function Form() {
     }
   }
 
-  // Render form fields
   const renderField = (field) => {
     switch (field.type) {
       case "text":
@@ -462,7 +456,7 @@ function Form() {
         return null
     }
   }
-  // Calculate progress percentage
+
   const progressPercentage = ((currentPage + 1) / formPages.length) * 100
 
   return (
@@ -508,10 +502,8 @@ function Form() {
                     {formPages[currentPage].title}
                   </h2>
 
-                  {/* Two-column grid layout */}
                   <div className="grid grid-cols-2 gap-4">
                     {formPages[currentPage].fields.map((field) => {
-                      // Determine if this field should be full width or half width
                       const isFullWidth =
                         currentPage === 0 &&
                         ["firstName", "lastName", "age"].includes(field.name)
@@ -562,8 +554,8 @@ function Form() {
                     </button>
                   ) : (
                     <button
-                      type="button" // Change from "submit" to "button"
-                      onClick={handleSubmit} // Add this onClick handler
+                      type="button"
+                      onClick={handleSubmit}
                       disabled={loading}
                       className="cursor-pointer px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-green-300"
                     >
@@ -626,7 +618,7 @@ function Form() {
                     type="button"
                     onClick={() => {
                       setFormData({
-                        // Reset form data to initial state
+                        // Reset
                         firstName: "",
                         lastName: "",
                         age: "",
