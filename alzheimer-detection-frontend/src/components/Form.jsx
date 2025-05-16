@@ -107,38 +107,44 @@ function Form() {
       fields: [
         {
           name: "ADL",
-          label: "ADL",
+          label: "ADL (Higher the better)",
           type: "number",
+          placeholder: "Activities of Daily Living (0 - 10)",
           columnClass: "col-span-1",
         },
         {
           name: "AlcoholConsumption",
-          label: "Alcohol Consumption",
+          label: "Alcohol Consumption (Lower the better",
           type: "number",
+          placeholder: "Weekly Consumption (0 - 20)",
           columnClass: "col-span-1",
         },
         {
           name: "PhysicalActivity",
-          label: "Physical Activity",
+          label: "Physical Activity (Higher the better)",
           type: "number",
+          placeholder: "Weekly activity in hours (0 - 10)",
           columnClass: "col-span-1",
         },
         {
           name: "DietQuality",
-          label: "Diet Quality",
+          label: "Diet Quality (Higher the better)",
           type: "number",
+          placeholder: "Diet Quality Score (0 - 10)",
           columnClass: "col-span-1",
         },
         {
           name: "SleepQuality",
-          label: "Sleep Quality",
+          label: "Sleep Quality (Higher the better)",
           type: "number",
+          placeholder: "Sleep Quality Score (4 - 10)",
           columnClass: "col-span-1",
         },
         {
           name: "FunctionalAssessment",
-          label: "How do you function daily?",
+          label: "How do you function daily? (Higher the better)",
           type: "number",
+          placeholder: "Functional assessment score (0 - 10)",
           columnClass: "col-span-1",
         },
         {
@@ -206,6 +212,7 @@ function Form() {
           name: "BMI",
           label: "BMI",
           type: "number",
+          placeholder: "Body Mass Index (15 - 40)",
           columnClass: "col-span-1",
         },
         {
@@ -247,92 +254,66 @@ function Form() {
           name: "SystolicBP",
           label: "Systolic BP",
           type: "number",
+          placeholder: "Systolic Blood Pressure (90 - 180 mmHg)",
           columnClass: "col-span-1",
         },
         {
           name: "DiastolicBP",
           label: "Diastolic BP",
           type: "number",
+          placeholder: "Diastolic Blood Pressure (60 - 120 mmHg)",
           columnClass: "col-span-1",
         },
         {
           name: "CholesterolTotal",
           label: "Cholesterol Total",
           type: "number",
+          placeholder: "Total Cholesterol Levels (150 - 300 mg/dL)",
           columnClass: "col-span-1",
         },
         {
           name: "CholesterolLDL",
           label: "Cholesterol LDL",
           type: "number",
+          placeholder: "Low-density lipoprotein (50 - 200 mg/dL)",
           columnClass: "col-span-1",
         },
         {
           name: "CholesterolHDL",
           label: "Cholesterol HDL",
           type: "number",
+          placeholder: "High-density lipoprotein (20 - 100 mg/dL)",
           columnClass: "col-span-1",
         },
         {
           name: "CholesterolTriglycerides",
           label: "Cholesterol Triglycerides",
           type: "number",
+          placeholder: "Triglycerides (50 - 400 mg/dL)",
           columnClass: "col-span-1",
         },
         {
           name: "MMSE",
-          label: "MMSE",
+          label: "MMSE (Higher the better)",
           type: "number",
+          placeholder: "Mini-Mental State Examination score (0 - 30)",
           columnClass: "col-span-1",
         },
       ],
     },
+    {
+      title: "Model Selection",
+      fields: [
+        {
+          name: "model",
+          label: "Choose a Model",
+          type: "select",
+          options: ["", "Random Forest", "Logistic Regression"],
+          columnClass: "col-span-2",
+        },
+      ],
+    },
   ]
-
-  // Prepare data for the model
-  // const prepareDataForModel = () => {
-  //   // Map form data to the expected model input format
-  //   const processedData = {
-  //     // Numerical features
-  //     Age: parseFloat(formData.age) || 0,
-  //     BMI: parseFloat(formData.BMI) || 0,
-  //     AlcoholConsumption: parseFloat(formData.alcoholConsumption) || 0,
-  //     PhysicalActivity: parseFloat(formData.physicalActivity) || 0,
-  //     DietQuality: parseFloat(formData.dietQuality) || 0,
-  //     SleepQuality: parseFloat(formData.sleepQuality) || 0,
-  //     SystolicBP: parseFloat(formData.systolicBP) || 0,
-  //     DiastolicBP: parseFloat(formData.diastolicBP) || 0,
-  //     CholesterolTotal: parseFloat(formData.cholesterolTotal) || 0,
-  //     CholesterolLDL: parseFloat(formData.cholesterolLDL) || 0,
-  //     CholesterolHDL: parseFloat(formData.cholesterolHDL) || 0,
-  //     CholesterolTriglycerides:
-  //       parseFloat(formData.cholesterolTriglycerides) || 0,
-  //     MMSE: parseFloat(formData.MMSE) || 0,
-  //     FunctionalAssessment: parseFloat(formData.functionalAssessment) || 0,
-  //     ADL: parseFloat(formData.ADL) || 0,
-
-  //     // Categorical features (sent as strings)
-  //     Gender: formData.gender || "Male",
-  //     Ethnicity: formData.ethnicity || "Caucasian",
-  //     EducationLevel: formData.education || "None",
-  //     Smoking: formData.smoking || "No",
-  //     FamilyHistoryAlzheimers: formData.familyHistoryOfAlzheimers || "No",
-  //     CardiovascularDisease: formData.cardiovascularDisease || "No",
-  //     Diabetes: formData.diabetes || "No",
-  //     Depression: formData.depression || "No",
-  //     HeadInjury: formData.headInjury || "No",
-  //     Hypertension: formData.hyperTension || "No",
-  //     MemoryComplaints: formData.memoryComplaints || "No",
-  //     BehavioralProblems: formData.behavioralProblems || "No",
-  //     Confusion: formData.confusion || "No",
-  //     Disorientation: formData.disorientation || "No",
-  //     PersonalityChanges: formData.personalityChanges || "No",
-  //     DifficultyCompletingTasks: formData.difficultyCompletingTasks || "No",
-  //     Forgetfulness: formData.forgetfulness || "No",
-  //   }
-
-  //   return processedData
-  // }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -377,6 +358,9 @@ function Form() {
         PersonalityChanges: formData.PersonalityChanges,
         DifficultyCompletingTasks: formData.DifficultyCompletingTasks,
         Forgetfulness: formData.Forgetfulness,
+
+        // Selected model
+        Model: formData.model,
       }
 
       console.log("Sending data:", processedData) // Debug log
@@ -432,6 +416,7 @@ function Form() {
             name={field.name}
             value={formData[field.name]}
             onChange={handleChange}
+            placeholder={field.placeholder || "Enter a value"}
             className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         )
@@ -446,15 +431,7 @@ function Form() {
           >
             {field.options.map((option) => (
               <option key={option} value={option}>
-                {option === ""
-                  ? "Select..."
-                  : option === "XGBoost"
-                  ? "XGBoost"
-                  : option === "Random Forest"
-                  ? "Random Forest"
-                  : option === "Logistic Regression"
-                  ? "Logistic Regression"
-                  : option}
+                {option === "" ? "Select..." : option}
               </option>
             ))}
           </select>

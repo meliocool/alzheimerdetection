@@ -20,20 +20,58 @@ CORS(app, resources={
 MODELS_DIR = './random_forest'
 
 # Load model and scaler
-def load_model_and_scaler():
-    """Load the Random Forest model and scaler"""
+# def load_model_and_scaler():
+#     """Load the Random Forest model and scaler"""
+#     try:
+#         model_path = os.path.join(MODELS_DIR, 'alzheimer_model.pkl')
+#         scaler_path = os.path.join(MODELS_DIR, 'scaler.pkl')
+
+#         if not all(os.path.exists(p) for p in [model_path, scaler_path]):
+#             print("Model or scaler file is missing!")
+#             return None, None
+
+#         model = joblib.load(model_path)
+#         scaler = joblib.load(scaler_path)
+        
+#         print("Model and scaler loaded successfully!")
+#         return model, scaler
+#     except Exception as e:
+#         print(f"Error loading model and scaler: {e}")
+#         return None, None
+
+def load_model_and_scaler(model_name="Random Forest"):
+    """Load the specified model and scaler."""
     try:
-        model_path = os.path.join(MODELS_DIR, 'alzheimer_model.pkl')
-        scaler_path = os.path.join(MODELS_DIR, 'scaler.pkl')
+        # Define folder and file names for each model
+        model_folders = {
+            "Random Forest": "random_forest",
+            "Logistic Regression": "logistic_regression"
+        }
+        model_files = {
+            "Random Forest": "alzheimer_model_hpt.pkl",  # Ends with 'tp'
+            "Logistic Regression": "alzheimer_model_logreg_tuned.pkl"  # Ends with 'tuned'
+        }
+        scaler_file = "scaler.pkl"
 
-        if not all(os.path.exists(p) for p in [model_path, scaler_path]):
-            print("Model or scaler file is missing!")
-            return None, None
+        # Get the folder and file paths
+        folder = model_folders.get(model_name)
+        model_file = model_files.get(model_name)
 
+        if not folder or not model_file:
+            raise ValueError(f"Model '{model_name}' is not supported.")
+
+        model_path = os.path.join(folder, model_file)
+        scaler_path = os.path.join(folder, scaler_file)
+
+        # Check if the files exist
+        if not os.path.exists(model_path) or not os.path.exists(scaler_path):
+            raise FileNotFoundError(f"Model or scaler file not found for {model_name}")
+
+        # Load the model and scaler
         model = joblib.load(model_path)
         scaler = joblib.load(scaler_path)
-        
-        print("Model and scaler loaded successfully!")
+
+        print(f"{model_name} model and scaler loaded successfully!")
         return model, scaler
     except Exception as e:
         print(f"Error loading model and scaler: {e}")
@@ -121,47 +159,107 @@ def format_input_data(data):
         print(f"Error formatting data: {e}")
         raise ValueError(f"Error formatting input data: {str(e)}")
 
+# @app.route('/api/predict', methods=['POST', 'OPTIONS'])
+# def predict():
+#     if request.method == 'OPTIONS':
+#         return _build_cors_preflight_response()
+
+#     start_time = time.time()
+    
+#     try:
+#         if not model or not scaler:
+#             return jsonify({
+#                 'status': 'error',
+#                 'message': 'Model not loaded'
+#             }), 500
+
+#         # Get and format input data
+#         data = request.json
+#         print("\nReceived data:", json.dumps(data, indent=2))
+        
+#         formatted_data = format_input_data(data)
+#         print("\nFormatted data:", json.dumps(formatted_data, indent=2))
+        
+#         # Convert to DataFrame and scale
+#         input_df = pd.DataFrame([formatted_data])
+#         print("\nInput DataFrame shape:", input_df.shape)
+        
+#         # Scale the data
+#         scaled_data = scaler.transform(input_df)
+#         print("\nScaled data shape:", scaled_data.shape)
+        
+#         # Make prediction
+#         prediction = int(model.predict(scaled_data)[0])
+#         probabilities = model.predict_proba(scaled_data)[0]
+        
+#         # Format probabilities with consistent precision
+#         alzheimer_prob = float(format(probabilities[1], '.4f'))
+#         no_alzheimer_prob = float(format(probabilities[0], '.4f'))
+        
+#         print("\nPrediction results:")
+#         print(f"Raw prediction: {prediction}")
+#         print(f"Raw probabilities: {probabilities}")
+#         print(f"Formatted probabilities: No Alzheimer's = {no_alzheimer_prob}, Has Alzheimer's = {alzheimer_prob}")
+
+#         processing_time = time.time() - start_time
+
+#         response = jsonify({
+#             'status': 'success',
+#             'prediction': prediction,
+#             'prediction_label': 'Has Alzheimer\'s' if prediction == 1 else 'No Alzheimer\'s',
+#             'probability': alzheimer_prob,  # Using formatted probability
+#             'probability_not_alzheimer': no_alzheimer_prob,
+#             'probability_alzheimer': alzheimer_prob,
+#             'processing_time': round(processing_time, 2),
+#             'interpretation': 'High risk of Alzheimer\'s' if prediction == 1 else 'Low risk of Alzheimer\'s',
+#             'confidence': f"{max(no_alzheimer_prob, alzheimer_prob):.1%}"
+#         })
+        
+#         return _corsify_actual_response(response)
+
+#     except Exception as e:
+#         print(f"Error during prediction: {e}")
+#         return _corsify_actual_response(jsonify({
+#             'status': 'error',
+#             'message': str(e)
+#         })), 500
+
 @app.route('/api/predict', methods=['POST', 'OPTIONS'])
 def predict():
     if request.method == 'OPTIONS':
         return _build_cors_preflight_response()
 
     start_time = time.time()
-    
+
     try:
+        data = request.json
+        print("\nReceived data:", json.dumps(data, indent=2))
+
+        # Get the selected model from the request
+        selected_model = data.get("Model", "Random Forest")
+        print(f"Selected model: {selected_model}")
+
+        # Load the appropriate model and scaler
+        model, scaler = load_model_and_scaler(selected_model)
         if not model or not scaler:
             return jsonify({
                 'status': 'error',
-                'message': 'Model not loaded'
+                'message': f"Failed to load the {selected_model} model."
             }), 500
 
-        # Get and format input data
-        data = request.json
-        print("\nReceived data:", json.dumps(data, indent=2))
-        
+        # Format input data
         formatted_data = format_input_data(data)
-        print("\nFormatted data:", json.dumps(formatted_data, indent=2))
-        
-        # Convert to DataFrame and scale
         input_df = pd.DataFrame([formatted_data])
-        print("\nInput DataFrame shape:", input_df.shape)
-        
+
         # Scale the data
         scaled_data = scaler.transform(input_df)
-        print("\nScaled data shape:", scaled_data.shape)
-        
+
         # Make prediction
         prediction = int(model.predict(scaled_data)[0])
         probabilities = model.predict_proba(scaled_data)[0]
-        
-        # Format probabilities with consistent precision
+
         alzheimer_prob = float(format(probabilities[1], '.4f'))
         no_alzheimer_prob = float(format(probabilities[0], '.4f'))
-        
-        print("\nPrediction results:")
-        print(f"Raw prediction: {prediction}")
-        print(f"Raw probabilities: {probabilities}")
-        print(f"Formatted probabilities: No Alzheimer's = {no_alzheimer_prob}, Has Alzheimer's = {alzheimer_prob}")
 
         processing_time = time.time() - start_time
 
@@ -169,14 +267,14 @@ def predict():
             'status': 'success',
             'prediction': prediction,
             'prediction_label': 'Has Alzheimer\'s' if prediction == 1 else 'No Alzheimer\'s',
-            'probability': alzheimer_prob,  # Using formatted probability
+            'probability': alzheimer_prob,
             'probability_not_alzheimer': no_alzheimer_prob,
             'probability_alzheimer': alzheimer_prob,
             'processing_time': round(processing_time, 2),
             'interpretation': 'High risk of Alzheimer\'s' if prediction == 1 else 'Low risk of Alzheimer\'s',
             'confidence': f"{max(no_alzheimer_prob, alzheimer_prob):.1%}"
         })
-        
+
         return _corsify_actual_response(response)
 
     except Exception as e:
