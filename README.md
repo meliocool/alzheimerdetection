@@ -9,16 +9,16 @@ This web application provides a user-friendly interface for the preliminary dete
 ### Live Demo
 
 [![Alzheimer's Detection Demo Video](https://github.com/meliocool/alzheimerdetection/blob/main/image.png?raw=true)](https://youtu.be/12r6yzwfRIA) 
-**Click the image above to watch a full demonstration of the application in action.**
+**Click the image above to watch a full demonstration of the application**
 
 ---
 
 ### Key Features
 
-* **Predictive Analysis:** Utilizes a trained `.pkl` machine learning model (initially exploring Random Forest and Logistic Regression) to provide potential risk assessments.
-* **Intuitive User Interface:** A clean and responsive frontend built with React (JSX) ensures a seamless user experience for inputting health information.
-* **Robust API Communication:** A Flask backend provides secure and efficient API endpoints for the frontend to send data and receive predictions.
-* **Real-time Feedback:** The application processes user input and returns prediction results with clear visualizations.
+* **Predictive Analysis:** Utilizes a trained `.pkl` machine learning model (initially exploring Random Forest and Logistic Regression) to provide potential risk assessments
+* **Intuitive User Interface:** A clean and responsive frontend built with React (JSX) ensures a seamless user experience for inputting health information
+* **Robust API Communication:** A Flask backend provides secure and efficient API endpoints for the frontend to send data and receive predictions
+* **Real-time Feedback:** The application processes user input and returns prediction results with clear visualizations
 
 ### Tech Stack
 
@@ -28,17 +28,16 @@ This web application provides a user-friendly interface for the preliminary dete
 
 ### Model Development 
 
-* **Data Preprocessing:** Led the cleaning, feature engineering, and preparation of the health data used for training.
-* **Model Selection & Training:** Experimented with and trained various models, including Random Forest and Logistic Regression, to achieve optimal performance.
-* **Model Serialization:** Implemented the saving of the trained model into a `.pkl` file for seamless integration with the Flask backend.
-
+* **Data Preprocessing:** Led the cleaning, feature engineering, and preparation of the health data used for training
+* **Model Selection & Training:** Experimented with and trained various models, including Random Forest and Logistic Regression, to achieve optimal performance
+* **Model Serialization:** Implemented the saving of the trained model into a `.pkl` file for seamless integration with the Flask backend
 ### Backend & API Development
 
-* Developed a Flask backend and RESTful API endpoints (`POST /predict`) to receive user input from the React frontend and serve the model's predictions.
+* Developed a Flask backend and RESTful API endpoints (`POST /predict`) to receive user input from the React frontend and serve the model's predictions
 
 ### Frontend Integration
 
-* Interactive React JSX frontend, focusing on a user-friendly design for data input and clear display of the prediction results.
+* Interactive React JSX frontend, focusing on a user-friendly design for data input and clear display of the prediction results
 * Implemented the API calls to communicate with the Flask backend.
 
 ### How to Run Locally
