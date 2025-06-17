@@ -55,6 +55,6 @@ This web application provides a user-friendly interface for the preliminary dete
 8.  Start the React frontend: `npm run dev`
 9.  Open a browser tab to the address provided by the React development server (`http://localhost:5173`).
 
-### 🤝 Contributing
+### Contributing
 
-This was a group data analytics project.
+This was a group data analytics project in 4th Semester.
