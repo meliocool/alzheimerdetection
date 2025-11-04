@@ -42,7 +42,7 @@ This web application provides a user-friendly interface for the preliminary dete
 
 ### How to Run Locally
 
-1.  Clone the repository: `git clone https://youtu.be/12r6yzwfRIA`
+1.  Clone the repository: `git clone https://github.com/meliocool/alzheimerdetection.git`
 2.  Navigate to the project directory: `cd alzheimer-detection-backend`
 3.  Create and activate a virtual environment (recommended):
     * `python -m venv venv`
@@ -57,3 +57,4 @@ This web application provides a user-friendly interface for the preliminary dete
 ### Contributing
 
 This was a group data analytics project in 4th Semester.
+
